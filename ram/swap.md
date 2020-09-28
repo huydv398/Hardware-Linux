@@ -126,4 +126,6 @@ Tham số `vfs_cache_pressure` là thâm số ảnh hưởng trực tiếp dến
 Default giá trị của tham số này là 100. việc tăng giá trị này sẽ làm tăng tốc độ lấy lại bộ nhớ VFS. Để swap hoạt động tốt nhất  chúng ta nên để nó về giá trị 50.
 
 `echo "vm.vfs_cache_pressure=50 >> /etc/sysctl.conf`
-https://linuxize.com/post/create-a-linux-swap-file/
+Link tham khảo:
+* https://viblo.asia/p/swap-eW65GWBJ5DO
+* https://linuxize.com/post/create-a-linux-swap-file/
