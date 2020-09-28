@@ -32,4 +32,98 @@ Thrashing có thể xảy ra khi tổng bộ nhớ ảo, cả RAM và swap, gầ
 
 Nếu bạn có thể quản lý để đưa ra lệnh như `free` hiển thị tải CPU và memory đang sử dụng, bạn sẽ thấy rằng CPU Load rất cao, có thể gấp 30-40 lần số CPU cóe trong hệ thống. Một biểu hiển khác là cả RAN và Swap được lấp đầy hoàn toàn.
 
-Sau thực tế, nhìn vào dữ liệu SAR(system activity report-báo cáo hoạt động của hệ thống) cũng có thể cho thấy các triệu chứng này. Tôi cài đặt 
+Sau thực tế, nhìn vào dữ liệu SAR(system activity report-báo cáo hoạt động của hệ thống) cũng có thể cho thấy các triệu chứng này. Tôi cài đặt SAR trên mọi hệ thống mà tôi làm việc và sử dụng nó để phân tích sau sửa chữa
+
+## Đặt dung lượng Swap cho phù hợp
+
+|Total RAM|Server|Hệ thống Desktop|
+|-|-|-|
+|< 2GB|2 x RAM|3 x RAM|
+|2GB < RAM < 8GB|= RAM|2 x RAM|
+|8GB < RAM < 64GB|RAM /2 |RAM x 1,5|
+|64GB < RAM|0.5 x RAM|Không khuyến khích|
+
+## Cấu hình Swap 
+### 1. SWAP Partition 
+* Xác định partition nào sẽ lấy làm swap
+
+`fdisk -l`
+### 2. Swap File
+1. Tạo một tệp sẽ được sử dụng để làm Swap:
+
+`fallocate -l 1G /swapfile`
+
+Nếu `fallocate` chưa được cài đặt hoặc neesy banjnhanaj được thông báo lỗi `fallocate` thì bạn có thể sử dụng lệnh sau để tạo một Swap File:
+
+`dd if=/dev/zero of=/swapfile bs=1024 count=1048576`
+
+2. Phân quyền. Chỉ người dùng root mới có thể viết và đọc swap fiel
+
+`chmod 600 /swapfile`
+
+3. Sử dụng tiện ích `mkswap` để thiết lập file làm vùng Linux Swap:
+
+`mkswap /swapfile`
+
+4. Cho phép dùng Swap
+
+`swapon /swapfile`
+
+Để cài đặt luôn được thực hiện khi restart ,
+
+` echo "/swapfile swap swap defaults 0 0" >> /etc/fstab`
+
+5. Để xác minh rằng swap đang hoạt động, sử dụng lệnh `swapon` hoặc `free`
+```
+[root@localhost ~]# swapon --show
+NAME       TYPE       SIZE USED PRIO
+/dev/dm-1  partition    2G 520K   -1
+/swapfile1 file      1024M   0B   -2
+```
+
+hoặc 
+
+```
+free -h
+
+              total        used        free      shared  buff/cache   available
+Mem:           974M        135M         62M        7.4M        777M        654M
+Swap:          3.0G        520K        3.0G
+```
+## Điều chỉnh giá trị Swappiness 
+Swappiness là một thuộc tính hạt nhân Linux xác định tần suất hệ thống sẽ sử dụng swap. Swappiness có thể có giá trị từ 0 đến 100. Giá trị thát sẽ khiến kernel có gắng tránh hoán đổi bất cứ khi nào có thể, trong khi giá trị cao hơn sẽ khiến kernel sử dụng swap nhiều hơn.
+
+Giá trị swap mặc định là 30-60. Kiểm tra giá trị Swappiness hiện tại:
+
+```
+cat /proc/sys/vm/swappiness
+
+30
+```
+
+Để thay đổi giá trị swap là 10:
+
+`sysctl vm.swappiness=10`
+
+Giá trị Swappiness tối ưu phụ thuộc vào khối lượng công việc hệ thống của bạn và các bộ nhớ đang được sử dụng. Bạn nên điều chỉnh thông số này theo từng bước nhở để tìm ra giá trị tối ưu.
+
+## Cách xóa swap file
+1. Hủy kích hoạt:
+
+`swapoff -v /swapfile`
+2. Xóa mục nhập tên khỏi tệp `/etc/fstab`
+3. Xóa tệp
+
+`rm /swapfile`
+
+### vfs_cache_pressure
+Để xem được `vfs_cache_pressure` chúng ta chỉ cần dùng command :
+
+`cat /proc/sys/vm/vfs_cache_pressure`
+
+Tham số `vfs_cache_pressure` là thâm số ảnh hưởng trực tiếp dến việc lưu trữ các mục siêu dữ liệu của hệ thống (filesystem metedata). Thực chất thì tham số này quyết định đến việc kernel lấy lại các memory đang được sử dụng cho vfs_cache
+
+Default giá trị của tham số này là 100. việc tăng giá trị này sẽ làm tăng tốc độ lấy lại bộ nhớ VFS. Để swap hoạt động tốt nhất  chúng ta nên để nó về giá trị 50.
+
+`echo "vm.vfs_cache_pressure=50 >> /etc/sysctl.conf`
+https://linuxize.com/post/create-a-linux-swap-file/

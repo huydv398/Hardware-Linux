@@ -30,3 +30,8 @@ Các dấu hiệu cảnh báo về tình trạng bộ nhớ thấp thực sự m
 * Linux Mượn bộ nhớ ram không sử dụng để lưu và cache. Điều này làm cho người dùng hiểu lầm khi nhìn vào chỉ số của `free`.
 * Bản chất điều này làm tăng tốc độ của linux
 * Bất cứ khi nào ứng dụng cần thêm bộ nhớ. Nó sẽ hoàn trả ngay lập tức hoặc nó sẽ được hoàn trả lại sau khi hoàn thành chức năng.
+
+
+Link tham khảo:
+* https://www.linuxatemyram.com/
+* https://viblo.asia/p/linux-ate-my-ram-OeVKBM9M5kW
